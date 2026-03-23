@@ -9,7 +9,6 @@ const firebaseConfig = {
     storageBucket: "friends-challenge-game.appspot.com"
 };
 
-// تهيئة الاتصال بالسيرفر
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 let currentRoomRef = null; 
@@ -20,10 +19,7 @@ let currentRoomRef = null;
 let userData = { 
     username: "Baqer Hamed", 
     playerID: "ID_" + Math.floor(Math.random() * 900000 + 100000),
-    coins: 5000, 
-    points: 12450, 
-    nameChangesToday: 0, 
-    lastChangeDate: new Date().toDateString()
+    coins: 5000, points: 12450, nameChangesToday: 0, lastChangeDate: new Date().toDateString()
 };
 let isAudioInit = false;
 
@@ -44,13 +40,13 @@ function updateMusicVol(val) { bgMusic.volume = val / 100; }
 function updateSfxVol(val) { sfxVolumeVal = val / 100; }
 
 // ==========================================
-// 3. بنك الأسئلة (المراحل A, B, C, D)
+// 3. بنك الأسئلة (المراحل)
 // ==========================================
 let qDB = {
     A: [ { q: "ما هي عاصمة العراق؟", a: ["البصرة", "بغداد", "أربيل"], c: 1 }, { q: "ما هو الكوكب الأحمر؟", a: ["الزهرة", "المشتري", "المريخ"], c: 2 }, { q: "أكبر محيط في العالم؟", a: ["الهادئ", "الهندي", "الأطلسي"], c: 0 } ],
     B: [ { img: "https://images.unsplash.com/photo-1543349689-9a4d426bee8e?w=300", q: "أين يقع هذا المعلم؟", a: ["لندن", "باريس", "برلين"], c: 1 }, { img: "https://images.unsplash.com/photo-1539650116574-1ef250440bf0?w=300", q: "في أي دولة توجد هذه الأهرامات؟", a: ["مصر", "المكسيك", "السودان"], c: 0 } ],
     C: [ { q: "اكتب اسم عاصمة فرنسا:", ans: "باريس" }, { q: "ما هو ناتج 5 مضروباً في 6؟", ans: "30" } ],
-    D: [ { text: "الأسد هو حيوان من الثدييات يُلقب بملك الغابة، ويتميز بالسرعة.", q: "بماذا يُلقب الأسد حسب النص؟", a: ["المفترس", "ملك الغابة", "الأسرع"], c: 1 } ]
+    D: [ { text: "الأسد حيوان من الثدييات يُلقب بملك الغابة.", q: "بماذا يُلقب الأسد حسب النص؟", a: ["المفترس", "ملك الغابة", "الأسرع"], c: 1 } ]
 };
 let availableQs = { A:[], B:[], C:[], D:[] };
 function getQuestion(stageType) {
@@ -60,13 +56,9 @@ function getQuestion(stageType) {
 }
 
 // ==========================================
-// 4. القائمة الجانبية والنوافذ
+// 4. الواجهة والنوافذ الجانبية
 // ==========================================
-const titlesData = [
-    { name: "مبتدئ", req: 0, icon: "🥚" }, { name: "هاوي", req: 100, icon: "🥉" },
-    { name: "محترف", req: 500, icon: "🥈" }, { name: "خبير", req: 1000, icon: "🥇" },
-    { name: "أسطورة", req: 5000, icon: "💎" }, { name: "ملك الذكاء", req: 10000, icon: "👑" }
-];
+const titlesData = [ { name: "مبتدئ", req: 0, icon: "🥚" }, { name: "هاوي", req: 100, icon: "🥉" }, { name: "محترف", req: 500, icon: "🥈" }, { name: "خبير", req: 1000, icon: "🥇" }, { name: "أسطورة", req: 5000, icon: "💎" }, { name: "ملك الذكاء", req: 10000, icon: "👑" } ];
 function getCurrentTitle() { let current = titlesData[0]; for (let i = 0; i < titlesData.length; i++) if (userData.points >= titlesData[i].req) current = titlesData[i]; return current; }
 
 function updateGlobalUI() {
@@ -83,72 +75,39 @@ function toggleMenu(e) { if(e) e.stopPropagation(); playSfx('menu'); const menu 
 function closeSidebarOutside(e) { const menu = document.getElementById('sideMenu'); if (menu.classList.contains('active')) { menu.classList.remove('active'); document.getElementById('sidebarOverlay').style.display = 'none'; } }
 
 function openModal(type) {
-    playSfx('menu'); 
-    const title = document.getElementById('modalTitle'); 
-    const body = document.getElementById('modalBody'); 
-    document.getElementById('modalOverlay').style.display = 'flex';
+    playSfx('menu'); const title = document.getElementById('modalTitle'); const body = document.getElementById('modalBody'); document.getElementById('modalOverlay').style.display = 'flex';
     if(document.getElementById('sideMenu').classList.contains('active')) { document.getElementById('sideMenu').classList.remove('active'); document.getElementById('sidebarOverlay').style.display = 'none'; }
 
-    if (type === 'developer') {
-        title.innerText = "حساب المطور 👨‍💻";
-        body.innerHTML = `<div style="text-align:center; line-height:2.5;"><p><b>الاسم:</b> Baqer Hamed</p><p><b>انستكرام:</b> <a href="https://instagram.com/01s1c" target="_blank" style="color:var(--primary); font-weight:bold; font-size:1.2rem;">01s1c</a></p><p style="color:#888;">الإنشاء: 2026/3/23</p></div>`;
-    } 
-    else if (type === 'achievements') {
-        title.innerText = "إنجازات اللعبة 🏅";
-        let content = `<div class="achievements-list">`;
-        achievements.forEach(ach => { let isUnl = userData.points >= ach.reqPoints; content += `<div class="ach-card ${isUnl ? 'unlocked' : 'locked'}"><div><b>${ach.name}</b><br><small style="color:#aaa;">${ach.desc}</small></div><div style="font-size:1.5rem;">${isUnl ? '🏆' : '🔒'}</div></div>`; });
-        body.innerHTML = content + `</div>`;
-    }
-    else if (type === 'settings') {
-        title.innerText = "الإعدادات ⚙️";
-        body.innerHTML = `<div style="text-align:right; line-height:2.5;"><label>صوت الموسيقى 🎵</label><input type="range" min="0" max="100" value="${bgMusic.volume * 100}" oninput="updateMusicVol(this.value)" style="width:100%;"><label>مؤثرات اللعبة 🔊</label><input type="range" min="0" max="100" value="${sfxVolumeVal * 100}" oninput="updateSfxVol(this.value)" style="width:100%;"><button onclick="document.body.classList.toggle('dark-mode'); playSfx('menu');" class="premium-btn primary-btn" style="margin-top:10px;">تغيير الوضع 🌓</button><button onclick="playSfx('menu'); alert('تم الحذف! 🗑️')" class="premium-btn" style="background:rgba(239,68,68,0.2); color:#ef4444;">حذف بيانات مؤقتة</button></div>`;
-    }
-    else if (type === 'help') {
-        title.innerText = "دليل اللعبة ❓";
-        body.innerHTML = `<div style="line-height:2; font-size:0.9rem; text-align:justify; max-height:400px; overflow-y:auto; padding-right:5px;"><h3 style="color:var(--primary);">نظام المباريات ⚔️</h3><p>المباراة تتكون من 4 مراحل. لن تبدأ المباراة الأونلاين إلا بعد دخول لاعب آخر.</p></div>`;
-    }
-    else if (type === 'admin') {
-        title.innerText = "لوحة التحكم 🛠️";
-        body.innerHTML = `<div style="display:flex; flex-direction:column; gap:10px;"><button class="premium-btn primary-btn" onclick="playSfx('play'); alert('مفعل!')">لوحة الأوامر 💻</button></div>`;
-    }
-    else if (type === 'account') {
-        title.innerText = "الحساب 👤";
-        body.innerHTML = `<div style="background:rgba(0,0,0,0.3); padding:20px; border-radius:15px; line-height:2;"><p>الاسم: <b>${userData.username}</b></p><p>ID: <b style="color:var(--primary)">${userData.playerID}</b></p></div><button class="premium-btn primary-btn" style="margin-top:15px;" onclick="promptNameChange()">تغيير الاسم (متبقي: ${2 - userData.nameChangesToday})</button>`;
-    }
-    else if (type === 'store') {
-        title.innerText = "المتجر الملكي 🛒";
-        let content = `<p style="text-align:center;">رصيدك: 🪙 <b style="color:gold;">${userData.coins}</b></p><div class="grid-store">`;
-        for(let i=0; i<20; i++) { let randID = Math.floor(Math.random() * 89999) + 1000; content += `<div class="store-item"><h3 style="color:var(--primary); margin:0 0 10px 0;">🆔 ${randID}</h3><button class="buy-btn" onclick="playSfx('play'); alert('تم شراء ${randID}')">💰 500</button></div>`; }
-        body.innerHTML = content + `</div>`;
-    }
-    else if (type === 'titles') {
-        title.innerText = "الألقاب 🎖️";
-        let content = `<div class="titles-list" style="display:flex; flex-direction:column; gap:10px;">`;
-        titlesData.forEach(t => { let isUnl = userData.points >= t.req; let bg = isUnl ? "background:rgba(99,102,241,0.2); border:1px solid var(--primary);" : "background:rgba(0,0,0,0.3); opacity:0.6;"; content += `<div style="${bg} padding:15px; border-radius:15px; display:flex; justify-content:space-between;"><div><span style="font-size:1.5rem;">${t.icon}</span> <b>${t.name}</b></div><div>${isUnl ? "مكتسب ✅" : t.req + " 🔒"}</div></div>`; });
-        body.innerHTML = content + `</div>`;
-    }
+    if (type === 'developer') { title.innerText = "حساب المطور 👨‍💻"; body.innerHTML = `<div style="text-align:center; line-height:2.5;"><p><b>الاسم:</b> Baqer Hamed</p><p><b>انستكرام:</b> <a href="https://instagram.com/01s1c" target="_blank" style="color:var(--primary); font-weight:bold; font-size:1.2rem;">01s1c</a></p></div>`; } 
+    else if (type === 'achievements') { title.innerText = "إنجازات اللعبة 🏅"; let content = `<div class="achievements-list">`; achievements.forEach(ach => { let isUnl = userData.points >= ach.reqPoints; content += `<div class="ach-card ${isUnl ? 'unlocked' : 'locked'}"><div><b>${ach.name}</b><br><small style="color:#aaa;">${ach.desc}</small></div><div style="font-size:1.5rem;">${isUnl ? '🏆' : '🔒'}</div></div>`; }); body.innerHTML = content + `</div>`; }
+    else if (type === 'settings') { title.innerText = "الإعدادات ⚙️"; body.innerHTML = `<div style="text-align:right; line-height:2.5;"><label>صوت الموسيقى 🎵</label><input type="range" min="0" max="100" value="${bgMusic.volume * 100}" oninput="updateMusicVol(this.value)" style="width:100%;"><label>مؤثرات اللعبة 🔊</label><input type="range" min="0" max="100" value="${sfxVolumeVal * 100}" oninput="updateSfxVol(this.value)" style="width:100%;"><button onclick="document.body.classList.toggle('dark-mode'); playSfx('menu');" class="premium-btn primary-btn" style="margin-top:10px;">تغيير الوضع 🌓</button></div>`; }
+    else if (type === 'help') { title.innerText = "دليل اللعبة ❓"; body.innerHTML = `<div style="line-height:2; font-size:0.9rem; text-align:justify;"><h3 style="color:var(--primary);">نظام المباريات ⚔️</h3><p>المباراة تتكون من 4 مراحل ولن تبدأ الأونلاين إلا باجتماع لاعبين اثنين.</p></div>`; }
+    else if (type === 'admin') { title.innerText = "لوحة التحكم 🛠️"; body.innerHTML = `<div style="display:flex; flex-direction:column; gap:10px;"><button class="premium-btn primary-btn" onclick="playSfx('play'); alert('مفعل!')">لوحة الأوامر 💻</button></div>`; }
+    else if (type === 'account') { title.innerText = "الحساب 👤"; body.innerHTML = `<div style="background:rgba(0,0,0,0.3); padding:20px; border-radius:15px; line-height:2;"><p>الاسم: <b>${userData.username}</b></p><p>ID: <b style="color:var(--primary)">${userData.playerID}</b></p></div><button class="premium-btn primary-btn" style="margin-top:15px;" onclick="promptNameChange()">تغيير الاسم</button>`; }
+    else if (type === 'store') { title.innerText = "المتجر الملكي 🛒"; let content = `<p style="text-align:center;">رصيدك: 🪙 <b style="color:gold;">${userData.coins}</b></p><div class="grid-store">`; for(let i=0; i<20; i++) { let randID = Math.floor(Math.random() * 89999) + 1000; content += `<div class="store-item"><h3 style="color:var(--primary); margin:0 0 10px 0;">🆔 ${randID}</h3><button class="buy-btn" onclick="playSfx('play'); alert('تم شراء ${randID}')">💰 500</button></div>`; } body.innerHTML = content + `</div>`; }
+    else if (type === 'titles') { title.innerText = "الألقاب 🎖️"; let content = `<div class="titles-list" style="display:flex; flex-direction:column; gap:10px;">`; titlesData.forEach(t => { let isUnl = userData.points >= t.req; let bg = isUnl ? "background:rgba(99,102,241,0.2); border:1px solid var(--primary);" : "background:rgba(0,0,0,0.3); opacity:0.6;"; content += `<div style="${bg} padding:15px; border-radius:15px; display:flex; justify-content:space-between;"><div><span style="font-size:1.5rem;">${t.icon}</span> <b>${t.name}</b></div><div>${isUnl ? "مكتسب ✅" : t.req + " 🔒"}</div></div>`; }); body.innerHTML = content + `</div>`; }
 }
 
 function promptNameChange() {
     playSfx('menu'); let today = new Date().toDateString();
     if (userData.lastChangeDate !== today) { userData.nameChangesToday = 0; userData.lastChangeDate = today; }
     if (userData.nameChangesToday >= 2) { alert("⚠️ استنفدت الحد اليومي لتغيير الاسم!"); return; }
-    let newName = prompt("أدخل الاسم الجديد (3 أحرف على الأقل):");
-    if (newName && newName.trim().length >= 3) { userData.username = newName.trim(); userData.nameChangesToday++; updateGlobalUI(); openModal('account'); alert(`🎉 تم التغيير! متبقي: ${2 - userData.nameChangesToday}`); }
+    let newName = prompt("أدخل الاسم الجديد:");
+    if (newName && newName.trim().length >= 3) { userData.username = newName.trim(); userData.nameChangesToday++; updateGlobalUI(); openModal('account'); }
 }
 
 function closeModal() { playSfx('menu'); document.getElementById('modalOverlay').style.display = 'none'; }
 document.getElementById('modalOverlay').onclick = function(e) { if(e.target === this) closeModal(); };
 
 // ==========================================
-// 5. نظام المباريات الأونلاين الحقيقي
+// 5. نظام غرفة الانتظار والمباريات (Lobby System)
 // ==========================================
 let matchTimer, matchTimeLeft = 15;
 let currentMatchStage = 0; 
 let currentMatchScore = 0;
 let matchMode = 'ai'; 
 let currentQData = null;
-let matchStarted = false; // لتتبع حالة بدء المباراة الأونلاين
+let matchStarted = false;
 
 function startMatch(mode) {
     playSfx('play'); matchMode = mode; currentMatchStage = 0; currentMatchScore = 0; matchStarted = false;
@@ -157,54 +116,53 @@ function startMatch(mode) {
     document.getElementById('mainScreen').style.display = 'none';
     document.getElementById('gameMatchScreen').style.display = 'flex';
     
-    // تصفير وإخفاء منطقة الأسئلة مبدئياً
+    // إخفاء ساحة الأسئلة وإظهار الانتظار مبدئياً
     document.getElementById('onlineQuizArea').style.display = 'none';
-    document.getElementById('qImageContainer').style.display = 'none';
-    document.getElementById('qTextContainer').style.display = 'none';
-    document.getElementById('matchOptionsContainer').style.display = 'none';
-    document.getElementById('matchInputContainer').style.display = 'none';
+    document.getElementById('waitingArea').style.display = 'flex';
 
     if(mode === 'online') {
         document.getElementById('matchPlayersBar').style.display = 'flex';
-        document.getElementById('waitingArea').style.display = 'block';
-        document.querySelector('#waitingArea h3').innerText = "جارٍ البحث عن منافسين...";
+        document.getElementById('waitingText').innerText = "جارٍ الاتصال بالسيرفر...";
         joinOnlineRoom();
     } else {
+        // للذكاء الاصطناعي يتخطى الانتظار
         document.getElementById('matchPlayersBar').style.display = 'none';
         document.getElementById('waitingArea').style.display = 'none';
-        document.getElementById('onlineQuizArea').style.display = 'block';
+        document.getElementById('onlineQuizArea').style.display = 'flex';
         loadMatchStage();
     }
     updateMatchUI();
 }
 
 function joinOnlineRoom() {
-    // الاتصال بقاعدة بيانات Firebase
     currentRoomRef = database.ref('matches/global_room/players/' + userData.playerID);
     currentRoomRef.set({ name: userData.username, score: 0 });
-    
-    // عند انسحاب اللاعب يتم مسحه من السيرفر
     currentRoomRef.onDisconnect().remove();
 
-    // الاستماع لعدد ونقاط اللاعبين الموجودين
     database.ref('matches/global_room/players').on('value', (snapshot) => {
         const playersObj = snapshot.val();
         if(!playersObj) return;
 
         renderOnlinePlayers(playersObj);
-
-        // فحص عدد اللاعبين المتصلين
         const playerCount = Object.keys(playersObj).length;
         
-        // إذا كان هناك لاعبان أو أكثر، ولم تبدأ المباراة بعد
+        // إذا اكتمل العدد (2 أو أكثر) ولم تبدأ اللعبة
         if (playerCount >= 2 && !matchStarted) {
             matchStarted = true;
-            document.getElementById('waitingArea').style.display = 'none';
-            document.getElementById('onlineQuizArea').style.display = 'block';
-            loadMatchStage();
+            playSfx('correct'); // صوت حماسي عند إيجاد لاعب
+            document.getElementById('waitingText').innerText = "اكتمل العدد! المعركة ستبدأ الآن... ⚔️";
+            document.getElementById('waitingText').style.color = "#10b981"; // لون أخضر
+            
+            // تأخير ثانيتين للانتقال لساحة اللعب
+            setTimeout(() => {
+                document.getElementById('waitingArea').style.display = 'none';
+                document.getElementById('onlineQuizArea').style.display = 'flex';
+                loadMatchStage();
+            }, 2000);
+            
         } else if (playerCount < 2 && !matchStarted) {
-            // تحديث نص الانتظار في حال كان اللاعب وحده
-            document.querySelector('#waitingArea h3').innerText = "في انتظار دخول لاعب آخر للبدء...";
+            document.getElementById('waitingText').innerText = "في انتظار دخول لاعب آخر للبدء... (1/2)";
+            document.getElementById('waitingText').style.color = "white";
         }
     });
 }
@@ -243,7 +201,7 @@ function loadMatchStage() {
     matchTimer = setInterval(() => {
         matchTimeLeft--; progress.style.width = (matchTimeLeft / 15) * 100 + "%";
         if(matchTimeLeft <= 3 && matchTimeLeft > 0) playSfx('timer');
-        if(matchTimeLeft <= 0) { playSfx('wrong'); handleAnswer(false); } // إذا انتهى الوقت تعتبر إجابة خاطئة
+        if(matchTimeLeft <= 0) { playSfx('wrong'); handleAnswer(false); }
     }, 1000);
 }
 
@@ -268,16 +226,10 @@ function handleAnswer(isCorrect) {
     clearInterval(matchTimer);
     if(isCorrect) {
         playSfx('correct'); currentMatchScore += 25; 
-        
-        // إرسال النقطة للسيرفر ليراها خصمك فوراً
-        if(matchMode === 'online' && currentRoomRef) {
-            currentRoomRef.update({ score: currentMatchScore });
-        }
+        if(matchMode === 'online' && currentRoomRef) currentRoomRef.update({ score: currentMatchScore });
     } else { playSfx('wrong'); }
     
-    updateMatchUI(); 
-    currentMatchStage++; 
-    loadMatchStage();
+    updateMatchUI(); currentMatchStage++; loadMatchStage();
 }
 
 function updateMatchUI() { document.getElementById('matchScoreDisplay').innerText = `نقاط المباراة: ${currentMatchScore}`; }
@@ -291,19 +243,12 @@ function endMatch() {
 }
 
 function exitToMain() {
-    playSfx('menu'); 
-    clearInterval(matchTimer);
+    playSfx('menu'); clearInterval(matchTimer);
     document.getElementById('gameMatchScreen').style.display = 'none';
     document.getElementById('mainScreen').style.display = 'flex';
     document.getElementById('menuIconBtn').style.display = 'block'; 
-    
-    // مغادرة غرفة الأونلاين ومسح اسمك منها لكي لا تُحتسب كلاعب نشط
-    if(currentRoomRef) { 
-        currentRoomRef.remove(); 
-        database.ref('matches/global_room/players').off(); 
-    }
+    if(currentRoomRef) { currentRoomRef.remove(); database.ref('matches/global_room/players').off(); }
 }
 
-// تشغيل الواجهة
 updateGlobalUI();
-                                                                         
+    
