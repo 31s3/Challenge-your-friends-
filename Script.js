@@ -11,18 +11,19 @@ const database = firebase.database();
 let currentRoomRef = null; 
 
 // ==========================================
-// 1. بيانات الحساب
+// 1. بيانات الحساب (تم إصلاح مشكلة الأونلاين)
 // ==========================================
 let userData = { 
     username: "Baqer Hamed", 
-    playerID: "885421",
+    playerID: "ID_" + Math.floor(Math.random() * 900000 + 100000), // تم الإصلاح: توليد ID مختلف لكل لاعب
     coins: 50000, 
-    points: 0, // نقطة البداية
+    points: 0, 
     nameChangesToday: 0, 
     lastChangeDate: new Date().toDateString(),
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Baqer",
     frame: "linear-gradient(45deg, var(--primary), var(--accent))" 
 };
+
 let isAudioInit = false;
 
 const sfxMenu = new Audio('https://cdn.pixabay.com/download/audio/2021/08/04/audio_bb630cc098.mp3?filename=click-button-140881.mp3');
