@@ -1,3 +1,6 @@
+// ==========================================
+// 1. إعدادات السيرفر (Firebase)
+// ==========================================
 const firebaseConfig = {
     apiKey: "AIzaSyAN_YWsXr07D_Gi-J1YUyP5SQK9_tAp8Gw",
     authDomain: "friends-challenge-game.firebaseapp.com",
@@ -11,11 +14,11 @@ const database = firebase.database();
 let currentRoomRef = null; 
 
 // ==========================================
-// 1. بيانات الحساب (تم إصلاح مشكلة الأونلاين)
+// 2. بيانات الحساب (تم إصلاح الـ ID العشوائي للأونلاين)
 // ==========================================
 let userData = { 
     username: "Baqer Hamed", 
-    playerID: "ID_" + Math.floor(Math.random() * 900000 + 100000), // تم الإصلاح: توليد ID مختلف لكل لاعب
+    playerID: "ID_" + Math.floor(Math.random() * 900000 + 100000), 
     coins: 50000, 
     points: 0, 
     nameChangesToday: 0, 
@@ -23,7 +26,6 @@ let userData = {
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Baqer",
     frame: "linear-gradient(45deg, var(--primary), var(--accent))" 
 };
-
 let isAudioInit = false;
 
 const sfxMenu = new Audio('https://cdn.pixabay.com/download/audio/2021/08/04/audio_bb630cc098.mp3?filename=click-button-140881.mp3');
@@ -43,7 +45,23 @@ function updateMusicVol(val) { bgMusic.volume = val / 100; }
 function updateSfxVol(val) { sfxVolumeVal = val / 100; }
 
 // ==========================================
-// 2. تحديث واجهة المستخدم
+// 3. بنك الأسئلة
+// ==========================================
+let qDB = {
+    A: [ { q: "ما هي عاصمة العراق؟", a: ["البصرة", "بغداد", "أربيل"], c: 1 }, { q: "ما هو الكوكب الأحمر؟", a: ["الزهرة", "المشتري", "المريخ"], c: 2 } ],
+    B: [ { img: "https://images.unsplash.com/photo-1543349689-9a4d426bee8e?w=300", q: "أين يقع هذا المعلم؟", a: ["لندن", "باريس", "برلين"], c: 1 } ],
+    C: [ { q: "اكتب اسم عاصمة فرنسا:", ans: "باريس" } ],
+    D: [ { text: "الأسد حيوان من الثدييات يُلقب بملك الغابة.", q: "بماذا يُلقب الأسد حسب النص؟", a: ["المفترس", "ملك الغابة", "الأسرع"], c: 1 } ]
+};
+let availableQs = { A:[], B:[], C:[], D:[] };
+function getQuestion(stageType) { 
+    if(availableQs[stageType].length === 0) availableQs[stageType] = [...qDB[stageType]]; 
+    let idx = Math.floor(Math.random() * availableQs[stageType].length); 
+    return availableQs[stageType].splice(idx, 1)[0]; 
+}
+
+// ==========================================
+// 4. الواجهة والإنجازات والألقاب
 // ==========================================
 const titlesData = [ { name: "مبتدئ", req: 0, icon: "🥚" }, { name: "هاوي", req: 1000, icon: "🥉" }, { name: "محترف", req: 5000, icon: "🥈" }, { name: "خبير", req: 20000, icon: "🥇" }, { name: "أسطورة", req: 50000, icon: "💎" }, { name: "إمبراطور", req: 100000, icon: "👑" } ];
 function getCurrentTitle() { let current = titlesData[0]; for (let i = 0; i < titlesData.length; i++) if (userData.points >= titlesData[i].req) current = titlesData[i]; return current; }
@@ -53,27 +71,29 @@ function updateGlobalUI() {
     document.getElementById('pointsDisplay').innerText = userData.points;
     document.getElementById('sideUsername').innerHTML = `${userData.username} <br><small style="color:var(--primary); font-size:0.8rem; font-weight:bold;">[${getCurrentTitle().icon} ${getCurrentTitle().name}]</small>`;
     document.getElementById('sideID').innerText = userData.playerID;
-    
     document.getElementById('sideAvatarImg').src = userData.avatar;
     document.getElementById('sideAvatarFrame').style.background = userData.frame;
 }
 
+const achievements = [];
+for(let i=1; i<=50; i++) {
+    let req = i <= 10 ? i * 200 : (i <= 30 ? i * 1000 : (i <= 45 ? i * 5000 : i * 20000));
+    let name = `تحدي المستوى ${i}`; let icon = "🎖️";
+    if(i===1) { name="الخطوة الأولى"; icon="🌱"; } else if(i===10) { name="المقاتل الصاعد"; icon="⚔️"; } else if(i===25) { name="المفترس الأكبر"; icon="🐅"; } else if(i===40) { name="أسطورة الذكاء"; icon="💎"; } else if(i===50) { name="إمبراطور اللعبة"; icon="👑"; }
+    achievements.push({ id: i, name: name, desc: `الوصول إلى ${req} نقطة`, reqPoints: req, icon: icon });
+}
+
 // ==========================================
-// 3. بنك المتجر (توليد الـ IDs، إطارات الحيوانات، الصور)
+// 5. بنك المتجر (توليد الـ IDs، إطارات الحيوانات، الصور)
 // ==========================================
 const storeDB = { ids: [], frames: [], avatars: [], gifts: [], reactions: [] };
 
-// 1. توليد 100 رقم ID متدرج الأسعار
 for(let i=1; i<=3; i++) storeDB.ids.push({ name: `ID: ${i}`, val: `${i}`, price: 100000, bg: "rgba(255, 215, 0, 0.2)" }); 
 for(let i=10; i<=14; i++) storeDB.ids.push({ name: `ID: ${i}`, val: `${i}`, price: 50000, bg: "rgba(255, 100, 0, 0.2)" }); 
 for(let i=100; i<=115; i++) storeDB.ids.push({ name: `ID: ${i}`, val: `${i}`, price: 20000, bg: "rgba(100, 200, 255, 0.2)" }); 
 for(let i=1000; i<=1025; i++) storeDB.ids.push({ name: `ID: ${i}`, val: `${i}`, price: 10000, bg: "rgba(0, 255, 100, 0.2)" }); 
-for(let i=0; i<51; i++) {
-    let r = Math.floor(Math.random()*9000000)+10000; 
-    storeDB.ids.push({ name: `ID: ${r}`, val: `${r}`, price: 2000, bg: "rgba(255, 255, 255, 0.1)" });
-}
+for(let i=0; i<51; i++) { let r = Math.floor(Math.random()*9000000)+10000; storeDB.ids.push({ name: `ID: ${r}`, val: `${r}`, price: 2000, bg: "rgba(255, 255, 255, 0.1)" }); }
 
-// 2. توليد 50 إطار (حيوانات مميزة + نيون عصري)
 const animalFrames = [
     { name: "إطار النمر 🐯", val: "repeating-linear-gradient(45deg, #ea580c, #ea580c 10px, #1c1917 10px, #1c1917 20px)", price: 8000 },
     { name: "إطار الحمار الوحشي 🦓", val: "repeating-linear-gradient(45deg, #f8fafc, #f8fafc 10px, #0f172a 10px, #0f172a 20px)", price: 7000 },
@@ -95,7 +115,6 @@ for(let i = animalFrames.length + 1; i <= 50; i++) {
 }
 storeDB.frames.forEach(f => { if(!f.bg) f.bg = f.val; });
 
-// 3. قسم الصور (Avatars)
 storeDB.avatars = [
     { name: "شبح الظلام", val: "https://api.dicebear.com/7.x/bottts/svg?seed=Ghost", price: 3000, bg: "rgba(31, 41, 55, 0.8)" },
     { name: "بطل المعركة", val: "https://api.dicebear.com/7.x/adventurer/svg?seed=Hero", price: 5000, bg: "rgba(127, 29, 29, 0.8)" },
@@ -103,18 +122,16 @@ storeDB.avatars = [
     { name: "القط المحظوظ", val: "https://api.dicebear.com/7.x/fun-emoji/svg?seed=Cat", price: 2000, bg: "rgba(139, 92, 246, 0.8)" }
 ];
 
-// 4. الهدايا والتفاعلات
 storeDB.gifts = [ { name: "صندوق الحظ", icon: "🎁", price: 500, bg: "rgba(0,0,0,0.4)" }, { name: "باقة ورد", icon: "💐", price: 200, bg: "rgba(0,0,0,0.4)" } ];
 storeDB.reactions = [ { name: "ضحك هستيري", icon: "😂", price: 100, bg: "rgba(0,0,0,0.4)" }, { name: "تفكير عميق", icon: "🤔", price: 100, bg: "rgba(0,0,0,0.4)" } ];
 
 // ==========================================
-// 4. تشغيل المتجر وعمليات الشراء
+// 6. دوال المتجر والقوائم
 // ==========================================
 function switchStoreTab(cat, btn) {
     playSfx('menu');
     document.querySelectorAll('.store-tab').forEach(b => b.classList.remove('active'));
     if(btn) btn.classList.add('active');
-
     const content = document.getElementById('storeContent');
     content.innerHTML = "";
     
@@ -142,7 +159,6 @@ function buyItem(category, name, price, value) {
             if(category === 'ids') userData.playerID = value;
             if(category === 'frames') userData.frame = value;
             if(category === 'avatars') userData.avatar = value;
-            
             updateGlobalUI(); playSfx('correct');
             alert(`🎉 مبروك! تم تطبيق "${name}" على حسابك بنجاح.`);
             document.getElementById('modalStoreBalance').innerText = `🪙 ${userData.coins}`;
@@ -150,25 +166,6 @@ function buyItem(category, name, price, value) {
     } else {
         playSfx('wrong'); alert("❌ رصيدك لا يكفي! العب أكثر لجمع العملات.");
     }
-}
-
-// ==========================================
-// 5. نظام الإنجازات الاحترافي (50 إنجاز)
-// ==========================================
-const achievements = [];
-for(let i=1; i<=50; i++) {
-    let req = i <= 10 ? i * 200 : (i <= 30 ? i * 1000 : (i <= 45 ? i * 5000 : i * 20000));
-    let name = `تحدي المستوى ${i}`;
-    let icon = "🎖️";
-    
-    // أسماء مميزة للمراحل الكبيرة
-    if(i===1) { name="الخطوة الأولى"; icon="🌱"; }
-    else if(i===10) { name="المقاتل الصاعد"; icon="⚔️"; }
-    else if(i===25) { name="المفترس الأكبر"; icon="🐅"; }
-    else if(i===40) { name="أسطورة الذكاء"; icon="💎"; }
-    else if(i===50) { name="إمبراطور اللعبة"; icon="👑"; }
-    
-    achievements.push({ id: i, name: name, desc: `الوصول إلى ${req} نقطة`, reqPoints: req, icon: icon });
 }
 
 function toggleMenu(e) { if(e) e.stopPropagation(); playSfx('menu'); const menu = document.getElementById('sideMenu'); const overlay = document.getElementById('sidebarOverlay'); menu.classList.toggle('active'); overlay.style.display = menu.classList.contains('active') ? 'block' : 'none'; }
@@ -198,20 +195,13 @@ function openModal(type) {
         let content = `<div class="achievements-list">`; 
         achievements.forEach(ach => { 
             let isUnl = userData.points >= ach.reqPoints; 
-            content += `
-                <div class="ach-card ${isUnl ? 'unlocked' : 'locked'}">
-                    <div style="display:flex; align-items:center; gap:15px;">
-                        <span class="ach-icon">${ach.icon}</span>
-                        <div><b>${ach.name}</b><br><small style="color:#aaa;">${ach.desc}</small></div>
-                    </div>
-                    <div style="font-size:1.5rem;">${isUnl ? '✅' : '🔒'}</div>
-                </div>`; 
+            content += `<div class="ach-card ${isUnl ? 'unlocked' : 'locked'}"><div style="display:flex; align-items:center; gap:15px;"><span class="ach-icon">${ach.icon}</span><div><b>${ach.name}</b><br><small style="color:#aaa;">${ach.desc}</small></div></div><div style="font-size:1.5rem;">${isUnl ? '✅' : '🔒'}</div></div>`; 
         }); 
         body.innerHTML = content + `</div>`; 
     }
     else if (type === 'developer') { title.innerText = "حساب المطور 👨‍💻"; body.innerHTML = `<div style="text-align:center; line-height:2.5;"><p><b>الاسم:</b> Baqer Hamed</p></div>`; } 
     else if (type === 'settings') { title.innerText = "الإعدادات ⚙️"; body.innerHTML = `<div style="text-align:right; line-height:2.5;"><label>صوت الموسيقى 🎵</label><input type="range" min="0" max="100" value="${bgMusic.volume * 100}" oninput="updateMusicVol(this.value)" style="width:100%;"><label>مؤثرات اللعبة 🔊</label><input type="range" min="0" max="100" value="${sfxVolumeVal * 100}" oninput="updateSfxVol(this.value)" style="width:100%;"><button onclick="document.body.classList.toggle('dark-mode'); playSfx('menu');" class="premium-btn primary-btn" style="margin-top:10px;">تغيير الوضع 🌓</button></div>`; }
-    else if (type === 'help') { title.innerText = "دليل اللعبة ❓"; body.innerHTML = `<div style="line-height:2; font-size:0.9rem; text-align:justify;"><h3 style="color:var(--primary);">نظام المباريات ⚔️</h3><p>المباراة تتكون من 4 مراحل ولن تبدأ الأونلاين إلا باجتماع لاعبين.</p></div>`; }
+    else if (type === 'help') { title.innerText = "دليل اللعبة ❓"; body.innerHTML = `<div style="line-height:2; font-size:0.9rem; text-align:justify;"><p>المباراة تتكون من 4 مراحل ولن تبدأ الأونلاين إلا باجتماع لاعبين.</p></div>`; }
     else if (type === 'admin') { title.innerText = "لوحة التحكم 🛠️"; body.innerHTML = `<div style="display:flex; flex-direction:column; gap:10px;"><button class="premium-btn primary-btn" onclick="playSfx('play'); alert('مفعل!')">لوحة الأوامر 💻</button></div>`; }
     else if (type === 'account') { title.innerText = "الحساب 👤"; body.innerHTML = `<div style="background:rgba(0,0,0,0.3); padding:20px; border-radius:15px; line-height:2;"><p>الاسم: <b>${userData.username}</b></p><p>ID: <b style="color:var(--primary)">${userData.playerID}</b></p></div><button class="premium-btn primary-btn" style="margin-top:15px;" onclick="promptNameChange()">تغيير الاسم</button>`; }
     else if (type === 'titles') { title.innerText = "الألقاب 🎖️"; let content = `<div class="titles-list" style="display:flex; flex-direction:column; gap:10px;">`; titlesData.forEach(t => { let isUnl = userData.points >= t.req; let bg = isUnl ? "background:rgba(99,102,241,0.2); border:1px solid var(--primary);" : "background:rgba(0,0,0,0.3); opacity:0.6;"; content += `<div style="${bg} padding:15px; border-radius:15px; display:flex; justify-content:space-between;"><div><span style="font-size:1.5rem;">${t.icon}</span> <b>${t.name}</b></div><div>${isUnl ? "مكتسب ✅" : t.req + " 🔒"}</div></div>`; }); body.innerHTML = content + `</div>`; }
@@ -222,17 +212,8 @@ function closeModal() { playSfx('menu'); document.getElementById('modalOverlay')
 document.getElementById('modalOverlay').onclick = function(e) { if(e.target === this) closeModal(); };
 
 // ==========================================
-// 6. بنك الأسئلة والمباريات الأونلاين
+// 7. نظام المباريات والأونلاين
 // ==========================================
-let qDB = {
-    A: [ { q: "ما هي عاصمة العراق؟", a: ["البصرة", "بغداد", "أربيل"], c: 1 }, { q: "ما هو الكوكب الأحمر؟", a: ["الزهرة", "المشتري", "المريخ"], c: 2 } ],
-    B: [ { img: "https://images.unsplash.com/photo-1543349689-9a4d426bee8e?w=300", q: "أين يقع هذا المعلم؟", a: ["لندن", "باريس", "برلين"], c: 1 } ],
-    C: [ { q: "اكتب اسم عاصمة فرنسا:", ans: "باريس" } ],
-    D: [ { text: "الأسد حيوان من الثدييات يُلقب بملك الغابة.", q: "بماذا يُلقب الأسد حسب النص؟", a: ["المفترس", "ملك الغابة", "الأسرع"], c: 1 } ]
-};
-let availableQs = { A:[], B:[], C:[], D:[] };
-function getQuestion(stageType) { if(availableQs[stageType].length === 0) availableQs[stageType] = [...qDB[stageType]]; let idx = Math.floor(Math.random() * availableQs[stageType].length); return availableQs[stageType].splice(idx, 1)[0]; }
-
 let matchTimer, matchTimeLeft = 15, currentMatchStage = 0, currentMatchScore = 0, matchMode = 'ai', currentQData = null, matchStarted = false;
 
 function startMatch(mode) {
@@ -240,8 +221,16 @@ function startMatch(mode) {
     document.getElementById('menuIconBtn').style.display = 'none'; document.getElementById('mainScreen').style.display = 'none'; document.getElementById('gameMatchScreen').style.display = 'flex';
     document.getElementById('onlineQuizArea').style.display = 'none'; document.getElementById('waitingArea').style.display = 'flex';
 
-    if(mode === 'online') { document.getElementById('matchPlayersBar').style.display = 'flex'; document.getElementById('waitingText').innerText = "جارٍ الاتصال بالسيرفر..."; joinOnlineRoom(); } 
-    else { document.getElementById('matchPlayersBar').style.display = 'none'; document.getElementById('waitingArea').style.display = 'none'; document.getElementById('onlineQuizArea').style.display = 'flex'; loadMatchStage(); }
+    if(mode === 'online') { 
+        document.getElementById('matchPlayersBar').style.display = 'flex'; 
+        document.getElementById('waitingText').innerText = "جارٍ الاتصال بالسيرفر..."; 
+        joinOnlineRoom(); 
+    } else { 
+        document.getElementById('matchPlayersBar').style.display = 'none'; 
+        document.getElementById('waitingArea').style.display = 'none'; 
+        document.getElementById('onlineQuizArea').style.display = 'flex'; 
+        loadMatchStage(); 
+    }
     updateMatchUI();
 }
 
@@ -258,7 +247,9 @@ function joinOnlineRoom() {
         if (playerCount >= 2 && !matchStarted) {
             matchStarted = true; playSfx('correct'); document.getElementById('waitingText').innerText = "اكتمل العدد! المعركة ستبدأ الآن... ⚔️"; document.getElementById('waitingText').style.color = "#10b981";
             setTimeout(() => { document.getElementById('waitingArea').style.display = 'none'; document.getElementById('onlineQuizArea').style.display = 'flex'; loadMatchStage(); }, 2000);
-        } else if (playerCount < 2 && !matchStarted) { document.getElementById('waitingText').innerText = "في انتظار دخول لاعب آخر للبدء... (1/2)"; document.getElementById('waitingText').style.color = "white"; }
+        } else if (playerCount < 2 && !matchStarted) { 
+            document.getElementById('waitingText').innerText = "في انتظار دخول لاعب آخر للبدء... (1/2)"; document.getElementById('waitingText').style.color = "white"; 
+        }
     });
 }
 
@@ -280,4 +271,4 @@ function loadMatchStage() {
     clearInterval(matchTimer); matchTimeLeft = 15;
     if(currentMatchStage >= 4) { endMatch(); return; }
     const stages = ['A', 'B', 'C', 'D']; const currentType = stages[currentMatchStage]; currentQData = getQuestion(currentType);
-    document.getElementById('stageIndicator').innerText = `المرحلة ${currentType}`; document.getElementById('qImageContainer').style.display = 'none'; document.getElementById('qTextContainer').style.display = 'none'; document.getElementById('matchOptionsContainer
+    document.getElementById('stageIndicator').innerText = `المرحلة ${currentType}`; document.getElementById('qImageContainer').style.display = 'none'; document.getElementById('qTextContainer').style.display = 'none'; document.getElementById('matchOptionsContainer').style.display = 'none'; document.getElementById('matchInputContainer').style.display = 'none'; document.getElementById('manualInputAnswer').value = ""; document.ge
