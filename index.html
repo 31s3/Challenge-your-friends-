@@ -70,27 +70,46 @@
         </main>
 
         <section id="gameMatchScreen" class="play-screen" style="display:none;">
+            
             <div id="matchPlayersBar" class="online-players-bar glass-panel" style="display:none; margin-bottom: 10px;"></div>
             
-            <div style="display:flex; justify-content:space-between; width:100%; margin-bottom:10px;">
-                <span id="stageIndicator" class="stage-badge">المرحلة A</span>
-                <span id="matchScoreDisplay" class="score-badge">نقاط المباراة: 0</span>
+            <div id="waitingArea" class="waiting-area glass-panel" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; width:100%;">
+                <div class="radar-spinner"></div>
+                <h3 id="waitingText" class="glow-text">جارٍ الاتصال بالسيرفر...</h3>
+                <p style="color:#aaa; font-size:0.85rem; margin-bottom:30px;">المباراة تحتاج إلى لاعبين (2) على الأقل للبدء</p>
+                <button class="premium-btn exit-btn" onclick="exitToMain()">انسحاب والعودة للوبي 🏳️</button>
             </div>
 
-            <div class="timer-bar"><div id="matchProgress" class="progress"></div></div>
-            
-            <div class="quiz-box glass-panel" style="display:flex; flex-direction:column; gap:15px; max-height: 400px; overflow-y:auto;">
-                <div id="qImageContainer" style="display:none; text-align:center;"><img id="qImage" src="" style="width:100%; max-height:150px; border-radius:15px; object-fit:cover;"></div>
-                <div id="qTextContainer" style="display:none; background:rgba(0,0,0,0.3); padding:10px; border-radius:10px; font-size:0.85rem; text-align:justify; line-height:1.8;"><p id="qParagraph"></p></div>
-                <h2 id="matchQuestionText" style="font-size:1.2rem; margin:0;">تحميل السؤال...</h2>
-                <hr class="quiz-divider" style="margin:5px 0;">
-                <div id="matchOptionsContainer" class="options-grid"></div>
-                <div id="matchInputContainer" style="display:none; width:100%;">
-                    <input type="text" id="manualInputAnswer" class="input-field" placeholder="اكتب إجابتك هنا...">
-                    <button class="premium-btn primary-btn" onclick="submitManualAnswer()" style="padding:10px; font-size:1rem; margin-top:10px;">إرسال الإجابة ✅</button>
+            <div id="onlineQuizArea" style="display:none; width:100%; height:100%; flex-direction:column;">
+                <div style="display:flex; justify-content:space-between; width:100%; margin-bottom:10px;">
+                    <span id="stageIndicator" class="stage-badge">المرحلة A</span>
+                    <span id="matchScoreDisplay" class="score-badge">نقاط المباراة: 0</span>
                 </div>
+
+                <div class="timer-bar"><div id="matchProgress" class="progress"></div></div>
+                
+                <div class="quiz-box glass-panel" style="display:flex; flex-direction:column; gap:15px; overflow-y:auto; margin-bottom:15px;">
+                    <div id="qImageContainer" style="display:none; text-align:center;">
+                        <img id="qImage" src="" style="width:100%; max-height:150px; border-radius:15px; object-fit:cover;">
+                    </div>
+                    
+                    <div id="qTextContainer" style="display:none; background:rgba(0,0,0,0.3); padding:10px; border-radius:10px; font-size:0.85rem; text-align:justify; line-height:1.8;">
+                        <p id="qParagraph"></p>
+                    </div>
+
+                    <h2 id="matchQuestionText" style="font-size:1.2rem; margin:0;">تحميل السؤال...</h2>
+                    <hr class="quiz-divider" style="margin:5px 0;">
+                    
+                    <div id="matchOptionsContainer" class="options-grid"></div>
+                    
+                    <div id="matchInputContainer" style="display:none; width:100%;">
+                        <input type="text" id="manualInputAnswer" class="input-field" placeholder="اكتب إجابتك هنا...">
+                        <button class="premium-btn primary-btn" onclick="submitManualAnswer()" style="padding:10px; font-size:1rem; margin-top:10px;">إرسال الإجابة ✅</button>
+                    </div>
+                </div>
+                
+                <button class="premium-btn exit-btn" onclick="exitToMain()" style="margin-top:auto;">انسحاب من المعركة 🏳️</button>
             </div>
-            <button class="premium-btn exit-btn" onclick="exitToMain()" style="margin-top:auto;">انسحاب 🏳️</button>
         </section>
 
         <div id="modalOverlay" class="modal-overlay">
