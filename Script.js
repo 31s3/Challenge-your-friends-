@@ -40,7 +40,7 @@ function updateMusicVol(val) { bgMusic.volume = val / 100; }
 function updateSfxVol(val) { sfxVolumeVal = val / 100; }
 
 // ==========================================
-// 3. بنك الأسئلة والمراحل
+// 3. بنك الأسئلة (المراحل)
 // ==========================================
 let qDB = {
     A: [ { q: "ما هي عاصمة العراق؟", a: ["البصرة", "بغداد", "أربيل"], c: 1 }, { q: "ما هو الكوكب الأحمر؟", a: ["الزهرة", "المشتري", "المريخ"], c: 2 }, { q: "أكبر محيط في العالم؟", a: ["الهادئ", "الهندي", "الأطلسي"], c: 0 } ],
@@ -56,7 +56,71 @@ function getQuestion(stageType) {
 }
 
 // ==========================================
-// 4. الواجهة والنوافذ
+// 4. نظام المتجر الجديد (البيانات والوظائف)
+// ==========================================
+const storeItems = {
+    avatars: [
+        { name: "شبح الظلام", icon: "👻", price: 1500, bg: "linear-gradient(135deg, #1f2937, #111827)" },
+        { name: "ملك النار", icon: "🔥", price: 3000, bg: "linear-gradient(135deg, #7f1d1d, #450a0a)" },
+        { name: "النينجا", icon: "🥷", price: 2500, bg: "linear-gradient(135deg, #312e81, #1e1b4b)" },
+        { name: "رائد فضاء", icon: "👨‍🚀", price: 2000, bg: "linear-gradient(135deg, #0f766e, #042f2e)" }
+    ],
+    frames: [
+        { name: "إطار ذهبي", icon: "✨", price: 5000, bg: "linear-gradient(135deg, #b45309, #78350f)" },
+        { name: "إطار نيون", icon: "⚡", price: 4000, bg: "linear-gradient(135deg, #4c1d95, #2e1065)" },
+        { name: "إطار ماسي", icon: "💎", price: 10000, bg: "linear-gradient(135deg, #0369a1, #0c4a6e)" }
+    ],
+    gifts: [
+        { name: "صندوق الحظ", icon: "🎁", price: 500, bg: "rgba(0,0,0,0.4)" },
+        { name: "باقة ورد", icon: "💐", price: 200, bg: "rgba(0,0,0,0.4)" },
+        { name: "تاج الملك", icon: "👑", price: 1500, bg: "rgba(0,0,0,0.4)" }
+    ],
+    reactions: [
+        { name: "ضحك هستيري", icon: "😂", price: 100, bg: "rgba(0,0,0,0.4)" },
+        { name: "غضب شديد", icon: "😡", price: 100, bg: "rgba(0,0,0,0.4)" },
+        { name: "قلب نابض", icon: "❤️", price: 150, bg: "rgba(0,0,0,0.4)" },
+        { name: "تفكير عميق", icon: "🤔", price: 100, bg: "rgba(0,0,0,0.4)" }
+    ]
+};
+
+function switchStoreTab(category, btnElement) {
+    playSfx('menu');
+    document.querySelectorAll('.store-tab').forEach(b => b.classList.remove('active'));
+    if(btnElement) btnElement.classList.add('active');
+
+    const content = document.getElementById('storeContent');
+    content.innerHTML = "";
+    
+    storeItems[category].forEach(item => {
+        content.innerHTML += `
+            <div class="store-item-card" style="background: ${item.bg};">
+                <div class="item-icon-large">${item.icon}</div>
+                <h4 class="item-name">${item.name}</h4>
+                <button class="price-btn" onclick="buyItem('${item.name}', ${item.price})">
+                    ${item.price} 🪙
+                </button>
+            </div>
+        `;
+    });
+}
+
+function buyItem(name, price) {
+    if (userData.coins >= price) {
+        if(confirm(`هل تريد شراء "${name}" مقابل ${price} عملة؟`)) {
+            userData.coins -= price;
+            updateGlobalUI();
+            playSfx('correct');
+            alert(`🎉 مبروك! لقد اشتريت "${name}" بنجاح.`);
+            document.getElementById('modalStoreBalance').innerText = `🪙 ${userData.coins}`;
+        }
+    } else {
+        playSfx('wrong');
+        alert("❌ عذراً، رصيدك لا يكفي لإتمام هذه العملية!");
+    }
+}
+
+// ==========================================
+// 5. الواجهة والنوافذ الجانبية
 // ==========================================
 const titlesData = [ { name: "مبتدئ", req: 0, icon: "🥚" }, { name: "هاوي", req: 100, icon: "🥉" }, { name: "محترف", req: 500, icon: "🥈" }, { name: "خبير", req: 1000, icon: "🥇" }, { name: "أسطورة", req: 5000, icon: "💎" }, { name: "ملك الذكاء", req: 10000, icon: "👑" } ];
 function getCurrentTitle() { let current = titlesData[0]; for (let i = 0; i < titlesData.length; i++) if (userData.points >= titlesData[i].req) current = titlesData[i]; return current; }
@@ -78,13 +142,29 @@ function openModal(type) {
     playSfx('menu'); const title = document.getElementById('modalTitle'); const body = document.getElementById('modalBody'); document.getElementById('modalOverlay').style.display = 'flex';
     if(document.getElementById('sideMenu').classList.contains('active')) { document.getElementById('sideMenu').classList.remove('active'); document.getElementById('sidebarOverlay').style.display = 'none'; }
 
-    if (type === 'developer') { title.innerText = "حساب المطور 👨‍💻"; body.innerHTML = `<div style="text-align:center; line-height:2.5;"><p><b>الاسم:</b> Baqer Hamed</p></div>`; } 
+    if (type === 'store') { 
+        title.innerText = "المتجر الملكي 🛒"; 
+        body.innerHTML = `
+            <div class="store-header">
+                <p>ثروتك الحالية</p>
+                <div id="modalStoreBalance" class="store-balance">🪙 ${userData.coins}</div>
+            </div>
+            <div class="store-tabs">
+                <div class="store-tab active" onclick="switchStoreTab('avatars', this)">الصور 👤</div>
+                <div class="store-tab" onclick="switchStoreTab('frames', this)">الإطارات 🖼️</div>
+                <div class="store-tab" onclick="switchStoreTab('gifts', this)">الهدايا 🎁</div>
+                <div class="store-tab" onclick="switchStoreTab('reactions', this)">تفاعلات 💬</div>
+            </div>
+            <div id="storeContent" class="grid-store"></div>
+        `;
+        switchStoreTab('avatars', document.querySelector('.store-tab.active'));
+    }
+    else if (type === 'developer') { title.innerText = "حساب المطور 👨‍💻"; body.innerHTML = `<div style="text-align:center; line-height:2.5;"><p><b>الاسم:</b> Baqer Hamed</p></div>`; } 
     else if (type === 'achievements') { title.innerText = "إنجازات اللعبة 🏅"; let content = `<div class="achievements-list">`; achievements.forEach(ach => { let isUnl = userData.points >= ach.reqPoints; content += `<div class="ach-card ${isUnl ? 'unlocked' : 'locked'}"><div><b>${ach.name}</b><br><small style="color:#aaa;">${ach.desc}</small></div><div style="font-size:1.5rem;">${isUnl ? '🏆' : '🔒'}</div></div>`; }); body.innerHTML = content + `</div>`; }
     else if (type === 'settings') { title.innerText = "الإعدادات ⚙️"; body.innerHTML = `<div style="text-align:right; line-height:2.5;"><label>صوت الموسيقى 🎵</label><input type="range" min="0" max="100" value="${bgMusic.volume * 100}" oninput="updateMusicVol(this.value)" style="width:100%;"><label>مؤثرات اللعبة 🔊</label><input type="range" min="0" max="100" value="${sfxVolumeVal * 100}" oninput="updateSfxVol(this.value)" style="width:100%;"><button onclick="document.body.classList.toggle('dark-mode'); playSfx('menu');" class="premium-btn primary-btn" style="margin-top:10px;">تغيير الوضع 🌓</button></div>`; }
     else if (type === 'help') { title.innerText = "دليل اللعبة ❓"; body.innerHTML = `<div style="line-height:2; font-size:0.9rem; text-align:justify;"><h3 style="color:var(--primary);">نظام المباريات ⚔️</h3><p>المباراة تتكون من 4 مراحل ولن تبدأ الأونلاين إلا باجتماع لاعبين.</p></div>`; }
     else if (type === 'admin') { title.innerText = "لوحة التحكم 🛠️"; body.innerHTML = `<div style="display:flex; flex-direction:column; gap:10px;"><button class="premium-btn primary-btn" onclick="playSfx('play'); alert('مفعل!')">لوحة الأوامر 💻</button></div>`; }
     else if (type === 'account') { title.innerText = "الحساب 👤"; body.innerHTML = `<div style="background:rgba(0,0,0,0.3); padding:20px; border-radius:15px; line-height:2;"><p>الاسم: <b>${userData.username}</b></p><p>ID: <b style="color:var(--primary)">${userData.playerID}</b></p></div><button class="premium-btn primary-btn" style="margin-top:15px;" onclick="promptNameChange()">تغيير الاسم</button>`; }
-    else if (type === 'store') { title.innerText = "المتجر الملكي 🛒"; let content = `<p style="text-align:center;">رصيدك: 🪙 <b style="color:gold;">${userData.coins}</b></p><div class="grid-store">`; for(let i=0; i<20; i++) { let randID = Math.floor(Math.random() * 89999) + 1000; content += `<div class="store-item"><h3 style="color:var(--primary); margin:0 0 10px 0;">🆔 ${randID}</h3><button class="buy-btn" onclick="playSfx('play'); alert('تم شراء ${randID}')">💰 500</button></div>`; } body.innerHTML = content + `</div>`; }
     else if (type === 'titles') { title.innerText = "الألقاب 🎖️"; let content = `<div class="titles-list" style="display:flex; flex-direction:column; gap:10px;">`; titlesData.forEach(t => { let isUnl = userData.points >= t.req; let bg = isUnl ? "background:rgba(99,102,241,0.2); border:1px solid var(--primary);" : "background:rgba(0,0,0,0.3); opacity:0.6;"; content += `<div style="${bg} padding:15px; border-radius:15px; display:flex; justify-content:space-between;"><div><span style="font-size:1.5rem;">${t.icon}</span> <b>${t.name}</b></div><div>${isUnl ? "مكتسب ✅" : t.req + " 🔒"}</div></div>`; }); body.innerHTML = content + `</div>`; }
 }
 
@@ -100,7 +180,7 @@ function closeModal() { playSfx('menu'); document.getElementById('modalOverlay')
 document.getElementById('modalOverlay').onclick = function(e) { if(e.target === this) closeModal(); };
 
 // ==========================================
-// 5. نظام غرفة الانتظار والمباريات
+// 6. نظام غرفة الانتظار والمباريات
 // ==========================================
 let matchTimer, matchTimeLeft = 15;
 let currentMatchStage = 0; 
@@ -247,3 +327,4 @@ function exitToMain() {
 }
 
 updateGlobalUI();
+
